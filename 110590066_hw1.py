@@ -60,10 +60,14 @@ def convert_to_index_color(img):
         centroids = new_centroids
 
     # assign each pixel to the nearest centroid
-    index_color_img = np.zeros_like(img)
+    index_color_img = np.zeros((img.shape[0], img.shape[1] + 20, 3), dtype=np.uint8)
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
             index_color_img[i, j] = centroids[labels[i * img.shape[1] + j]]
+    for i in range(16):
+        x0 = img.shape[0] * i // 16
+        x1 = img.shape[0] * (i + 1) // 16
+        index_color_img[x0 : x1 + 20, img.shape[1] : img.shape[1] + 20] = centroids[i]
     return index_color_img
 
 
@@ -73,6 +77,25 @@ def resize_without_interpolation(img, scale):
     for i in range(new_img.shape[0]):
         for j in range(new_img.shape[1]):
             new_img[i, j] = img[int(i / scale), int(j / scale)]
+    return new_img
+
+
+# 2.2 Resize the image with bilinear interpolation
+def resize_with_bilinear_interpolation(img, scale):
+    new_img = np.zeros((int(img.shape[0] * scale), int(img.shape[1] * scale), 3), dtype=np.uint8)
+    for i in range(new_img.shape[0]):
+        for j in range(new_img.shape[1]):
+            x = i / scale
+            y = j / scale
+            x1 = int(x)
+            y1 = int(y)
+            x2 = min(x1 + 1, img.shape[0] - 1)
+            y2 = min(y1 + 1, img.shape[1] - 1)
+            x_offset = x - x1
+            y_offset = y - y1
+            t = img[x1, y1] * (1 - x_offset) + img[x2, y1] * x_offset
+            b = img[x1, y2] * (1 - x_offset) + img[x2, y2] * x_offset
+            new_img[i, j] = t * (1 - y_offset) + b * y_offset
     return new_img
 
 
@@ -106,4 +129,10 @@ if __name__ == "__main__":
         double_img = resize_without_interpolation(img, 2)
         cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_q2-1-double.jpg"), double_img)
         half_img = resize_without_interpolation(img, 0.5)
+        cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_q2-1-half.jpg"), half_img)
+
+        # 2.2 Resize the image with bilinear interpolation
+        double_img = resize_with_bilinear_interpolation(img, 2)
+        cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_q2-2-double.jpg"), double_img)
+        half_img = resize_with_bilinear_interpolation(img, 0.5)
         cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_q2-2-half.jpg"), half_img)
