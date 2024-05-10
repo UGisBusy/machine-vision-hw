@@ -70,26 +70,22 @@ def water_shed_seg(img, label_img, label_poses):
                 queue.push((ii, jj), np.average(np.abs(arr)))
                 result[ii, jj] = -2
 
-    a = result.copy()
-    a[a[:, :] == -2] = 255
-    cv2.imwrite("tt.png", a)
     progress = tqdm.tqdm(total=img.shape[0] * img.shape[1], desc="Tsunami Coming...")
     while len(queue) > 0:
         progress.update(1)
         i, j = queue.pop()
-
         neighbors_label = get_8_neighbors(result, i, j)
         if len(np.unique(neighbors_label[neighbors_label[:] > 0])) > 1:
             result[i, j] = -1  # edge
         else:
             result[i, j] = np.max(neighbors_label)
+            for ii, jj in get_8_neighbors_index(img, i, j):
+                if result[ii, jj] == 0:
+                    arr = get_8_neighbors(img, ii, jj)
+                    arr -= np.full_like(arr, img[ii, jj])
+                    queue.push((ii, jj), np.average(np.abs(arr)))
+                    result[ii, jj] = -2
 
-        for ii, jj in get_8_neighbors_index(img, i, j):
-            if result[ii, jj] == 0:
-                arr = get_8_neighbors(img, ii, jj)
-                arr -= np.full_like(arr, img[ii, jj])
-                queue.push((ii, jj), np.average(np.abs(arr)))
-                result[ii, jj] = -2
     progress.close()
     return result
 
