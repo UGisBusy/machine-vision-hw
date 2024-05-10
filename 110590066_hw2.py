@@ -34,9 +34,7 @@ def to_label_seq(img, n):
                 # some of neighbors have label
                 elif len(neighbor[neighbor != 1]) > 0:
                     bound_img[i, j] = neighbor[neighbor != 1].min()
-                    for k in neighbor[
-                        np.logical_and(neighbor != 1, neighbor != bound_img[i, j])
-                    ]:
+                    for k in neighbor[np.logical_and(neighbor != 1, neighbor != bound_img[i, j])]:
                         bound_img[bound_img == k] = bound_img[i, j]
                         labels.discard(k)
                 # all neighbors are background
@@ -63,8 +61,8 @@ if __name__ == "__main__":
 
     for img_id, filename in enumerate(os.listdir(images_dir)):
         img = cv2.imread(os.path.join(images_dir, filename))
-        binary_img = to_binary(to_gray(img), [136, 179, 243][img_id])
+        binary_img = to_binary(to_gray(img), [136, 179, 243, 227][img_id])
         label_img = to_label_seq(binary_img, 4)
-        cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_q1-4.jpg"), label_img)
+        cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_4.jpg"), label_img)
         label_img = to_label_seq(binary_img, 8)
-        cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_q1-8.jpg"), label_img)
+        cv2.imwrite(os.path.join(results_dir, filename[:-4] + "_8.jpg"), label_img)
