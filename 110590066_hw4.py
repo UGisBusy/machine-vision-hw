@@ -61,7 +61,6 @@ def process_labels(img):
 def water_shed_seg(img, label_img, label_poses):
     queue = PriorityQueue()
     result = label_img.copy()
-    # img = to_gray(img)
     for ind in range(len(label_poses)):
         i, j = label_poses[ind]
         for ii, jj in get_8_neighbors_index(img, i, j):
@@ -95,11 +94,9 @@ def add_point(img, i, j, queue, result):
     arr = img[xmin:xmax, ymin:ymax]
 
     mean = np.average(arr, axis=(0, 1))
-    # print(arr)
-    # print(mean)
-    # exit()
     var = np.sum(np.var(arr, axis=(0, 1)))
-    dis = np.sum(np.sqrt((arr - mean) ** 2))
+    # dis = np.sum(np.sqrt((arr - mean) ** 2))
+    dis = np.sum(np.abs(arr - mean))
     queue.push((i, j), dis + var * 2)
     result[i, j] = -2
 
@@ -112,7 +109,7 @@ def coloring(label_img, label_colors, img):
             continue
         new_img_flat[label_img_flat == ind] = color
     new_img = new_img_flat.reshape((img.shape[0], img.shape[1], 3))
-    cv2.imwrite(os.path.join(results_dir, f"{img_id}_aresult.jpg"), new_img)
+    cv2.imwrite(os.path.join(results_dir, f"{filename[:-4]}_q1_pure.jpg"), new_img)
     return cv2.addWeighted(img, 0.5, new_img, 0.5, 0)
 
 
@@ -128,14 +125,8 @@ if __name__ == "__main__":
     # read each image in the images directory
     for img_id, filename in enumerate(os.listdir(images_dir)):
         img = cv2.imread(os.path.join(images_dir, filename))
-        # gray = to_gray(img)
-        # apply guassian blur
-
         label_img = cv2.imread(os.path.join(labels_dir, f"{filename[:-4]}_label.png"))
         label_img, label_colors, label_poses = process_labels(label_img)
-
-        # water_img = water_shed_seg(gray, label_img, label_poses)
         water_img = water_shed_seg(img, label_img, label_poses)
-
         color_img = coloring(water_img, label_colors, img)
-        cv2.imwrite(os.path.join(results_dir, f"{img_id}_result.jpg"), color_img)
+        cv2.imwrite(os.path.join(results_dir, f"{filename[:-4]}_q1.jpg"), color_img)
